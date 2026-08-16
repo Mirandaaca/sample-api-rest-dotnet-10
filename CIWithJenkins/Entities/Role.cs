@@ -8,8 +8,6 @@ namespace CIWithJenkins.Entities
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-
-        // A role is in many users
-        public IEnumerable<User> Users = Enumerable.Empty<User>();
+        public ICollection<User> Users { get; set; } = new List<User>();
     }
 }

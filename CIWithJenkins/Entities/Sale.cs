@@ -18,7 +18,7 @@ namespace CIWithJenkins.Entities
         [ForeignKey("ClientId")]
         public Client Client { get; set; }
         // A sale has many sale details
-        public IEnumerable<SaleDetail> SaleDetails { get; set; } = Enumerable.Empty<SaleDetail>();
+        public ICollection<SaleDetail> SaleDetails { get; set; } = new List<SaleDetail>();
         
     }
 }

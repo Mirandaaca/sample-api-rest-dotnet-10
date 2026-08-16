@@ -8,9 +8,11 @@ namespace CIWithJenkins.Entities
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string Surname { get; set; }
+        [EmailAddress(ErrorMessage = "Invalid Email Address")]
         public string Email { get; set; }
+        [Phone(ErrorMessage = "Invalid Phone Number")]
         public string Phone { get; set; }
         // A client is in many sales
-        public IEnumerable<Sale> Sales { get; set; } = Enumerable.Empty<Sale>();
+        public ICollection<Sale> Sales { get; set; } = new List<Sale>();
     }
 }
