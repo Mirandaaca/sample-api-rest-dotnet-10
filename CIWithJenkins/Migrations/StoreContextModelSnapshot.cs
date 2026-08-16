@@ -59,15 +59,15 @@ namespace CIWithJenkins.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
-
-                    b.Property<string>("name")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -218,7 +218,7 @@ namespace CIWithJenkins.Migrations
             modelBuilder.Entity("CIWithJenkins.Entities.User", b =>
                 {
                     b.HasOne("CIWithJenkins.Entities.Role", "Role")
-                        .WithMany()
+                        .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -234,6 +234,11 @@ namespace CIWithJenkins.Migrations
             modelBuilder.Entity("CIWithJenkins.Entities.Product", b =>
                 {
                     b.Navigation("SaleDetails");
+                });
+
+            modelBuilder.Entity("CIWithJenkins.Entities.Role", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("CIWithJenkins.Entities.Sale", b =>
