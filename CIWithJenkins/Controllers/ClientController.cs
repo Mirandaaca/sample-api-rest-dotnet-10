@@ -16,33 +16,36 @@ namespace CIWithJenkins.Controllers
         }
         [HttpGet]
         [ProducesResponseType(200)]
-        public async Task<List<ReadClientDTO>> GetAll()
+        public async Task<ActionResult<List<ReadClientDTO>>> GetAll()
         {
-            return await _clientService.GetAll();
+            return Ok(await _clientService.GetAll());
         }
         [HttpGet("{id:guid}")]
         [ProducesResponseType(200)]
-        public async Task<ReadClientDTO> GetById(Guid id)
+        public async Task<ActionResult<ReadClientDTO>> GetById(Guid id)
         {
-            return await _clientService.GetById(id);
+            return Ok(await _clientService.GetById(id));
         }
         [HttpPut("{id:guid}")]
         [ProducesResponseType(204)]
-        public async Task Update(Guid id, ClientDTO client)
+        public async Task<ActionResult> Update(Guid id, ClientDTO client)
         {
             await _clientService.Update(id, client);
+            return NoContent();
         }
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(204)]
-        public async Task Delete(Guid id)
+        public async Task<ActionResult> Delete(Guid id)
         {
             await _clientService.Delete(id);
+            return NoContent();
         }
         [HttpPost]
         [ProducesResponseType(201)]
-        public async Task Create(ClientDTO client)
+        public async Task<ActionResult> Create(ClientDTO client)
         {
             await _clientService.Create(client);
+            return Created();
         }
     }
 }
