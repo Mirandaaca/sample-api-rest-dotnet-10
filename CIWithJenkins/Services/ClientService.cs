@@ -3,18 +3,22 @@ using CIWithJenkins.Entities;
 using CIWithJenkins.Exceptions;
 using CIWithJenkins.Interfaces.Repository;
 using CIWithJenkins.Interfaces.Services;
+using FluentValidation;
 
 namespace CIWithJenkins.Services
 {
     public class ClientService : IClientService
     {
         private readonly IClientRepository _clientRepository;
-        public ClientService(IClientRepository clientRepository)
+        private readonly IValidator<ClientDTO> _clientValidator;
+        public ClientService(IClientRepository clientRepository, IValidator<ClientDTO> clientValidator)
         {
             _clientRepository = clientRepository;
+            _clientValidator = clientValidator;
         }
         public async Task Create(ClientDTO client)
         {
+            await _clientValidator.ValidateAndThrowAsync(client);
             Client objClient = new Client
             {
                 Name = client.Name,
@@ -61,6 +65,7 @@ namespace CIWithJenkins.Services
 
         public async Task Update(Guid id, ClientDTO client)
         {
+            await _clientValidator.ValidateAndThrowAsync(client);
             var clientFound = await _clientRepository.GetById(id);
             if (clientFound == null) throw new ClientNotFoundException(id);
             clientFound.Name = client.Name;

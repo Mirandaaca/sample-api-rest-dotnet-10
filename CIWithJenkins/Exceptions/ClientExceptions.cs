@@ -1,20 +1,18 @@
-﻿namespace CIWithJenkins.Exceptions
+namespace CIWithJenkins.Exceptions
 {
-    public class ClientExceptions : Exception
+    public abstract class ClientExceptions : DomainException
     {
-        public ClientExceptions() : base() { }
-
-        public ClientExceptions(string message) : base(message) { }
-
-        public ClientExceptions(string message, Exception innerException) 
+        protected ClientExceptions(string message) : base(message) { }
+        protected ClientExceptions(string message, Exception innerException)
             : base(message, innerException) { }
     }
 
-    public class ClientNotFoundException : ClientExceptions 
+    public class ClientNotFoundException : ClientExceptions
     {
-        public ClientNotFoundException(Guid clientId) 
-            : base($"Client with Id '{clientId}' not found.") { }
-
+        public ClientNotFoundException(Guid clientId)
+            : base($"A client with Id '{clientId}' was not found.") { }
         public ClientNotFoundException(string message) : base(message) { }
+        public override int StatusCode => StatusCodes.Status404NotFound;
+        public override string Title => "Resource not found";
     }
 }

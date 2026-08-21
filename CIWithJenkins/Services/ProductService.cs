@@ -3,18 +3,22 @@ using CIWithJenkins.Entities;
 using CIWithJenkins.Exceptions;
 using CIWithJenkins.Interfaces.Repository;
 using CIWithJenkins.Interfaces.Services;
+using FluentValidation;
 
 namespace CIWithJenkins.Services
 {
     public class ProductService : IProductService
     {
         private readonly IProductRepository _productRepository;
-        public ProductService(IProductRepository productRepository)
+        private readonly IValidator<ProductDTO> _productValidator;
+        public ProductService(IProductRepository productRepository, IValidator<ProductDTO> productValidator)
         {
             _productRepository = productRepository;
+            _productValidator = productValidator;
         }
         public async Task Create(ProductDTO productDTO)
         {
+            await _productValidator.ValidateAndThrowAsync(productDTO);
             Product product = new Product
             {
                 Name = productDTO.Name,
@@ -61,6 +65,7 @@ namespace CIWithJenkins.Services
 
         public async Task Update(Guid id, ProductDTO productDTO)
         {
+            await _productValidator.ValidateAndThrowAsync(productDTO);
             var product = await _productRepository.GetById(id);
             if (product == null) throw new ProductNotFoundException(id);
 
