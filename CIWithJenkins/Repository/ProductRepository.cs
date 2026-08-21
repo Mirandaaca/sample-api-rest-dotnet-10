@@ -26,7 +26,7 @@ namespace CIWithJenkins.Repository
 
         public async Task<List<Product>> GetAll()
         {
-            return await _storeContext.Products.ToListAsync();
+            return await _storeContext.Products.AsNoTracking().ToListAsync();
         }
 
         public async Task<Product> GetById(Guid id)
