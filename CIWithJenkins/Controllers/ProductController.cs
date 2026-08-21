@@ -16,14 +16,14 @@ namespace CIWithJenkins.Controllers
         }
         [HttpGet]
         [ProducesResponseType(200)]
-        public async Task<ActionResult<List<ProductDTO>>> GetAll()
+        public async Task<ActionResult<List<ReadProductDTO>>> GetAll()
         {
             var products = await _productService.GetAll();
             return Ok(products);
         }
         [HttpGet("{id:guid}")]
         [ProducesResponseType(200)]
-        public async Task<ActionResult<ProductDTO>> GetById(Guid id)
+        public async Task<ActionResult<ReadProductDTO>> GetById(Guid id)
         {
             return Ok(await _productService.GetById(id));
         }
