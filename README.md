@@ -1,8 +1,7 @@
 <!--
-  Badges pendientes: se activan solos cuando exista el workflow / el archivo LICENSE.
-  Basta con descomentarlos.
+  Badge pendiente: se activa solo cuando exista el archivo LICENSE.
+  Basta con descomentarlo y moverlo al bloque de abajo.
 
-  [![Build](https://github.com/Mirandaaca/sample-api-rest-dotnet-10/actions/workflows/ci.yml/badge.svg)](https://github.com/Mirandaaca/sample-api-rest-dotnet-10/actions/workflows/ci.yml)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 -->
 
@@ -12,6 +11,7 @@
 
 **API REST de gestión de ventas construida con ASP.NET Core 10, EF Core y PostgreSQL.**
 
+[![CI](https://github.com/Mirandaaca/sample-api-rest-dotnet-10/actions/workflows/ci.yml/badge.svg)](https://github.com/Mirandaaca/sample-api-rest-dotnet-10/actions/workflows/ci.yml)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![EF Core](https://img.shields.io/badge/EF%20Core-10.0-512BD4?logo=nuget&logoColor=white)](https://learn.microsoft.com/ef/core/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -33,7 +33,7 @@ El objetivo del proyecto es doble:
 2. **Montar un pipeline de CI/CD completo** sobre un servidor Fedora autoalojado: al publicar un tag, Jenkins compila el proyecto, aplica migraciones y actualiza el servicio `systemd` en producción sin intervención manual.
 
 > [!NOTE]
-> Proyecto en desarrollo activo. Actualmente solo el módulo de **clientes** expone endpoints; el resto de entidades están modeladas y migradas, pero aún sin su capa de servicios. Ver el [roadmap](#roadmap).
+> Proyecto en desarrollo activo. Actualmente los módulos de **clientes** y **productos** exponen endpoints; el resto de entidades están modeladas y migradas, pero aún sin su capa de servicios. Ver el [roadmap](#roadmap).
 
 ---
 
@@ -70,7 +70,7 @@ HTTP Request
 | Elemento | Motivo |
 |---|---|
 | DTOs separados de las entidades | Evita exponer el modelo de dominio y las propiedades de navegación en la API. `ClientDTO` (escritura) y `ReadClientDTO` (lectura) permiten que el `Id` sea de solo lectura. |
-| Excepciones de dominio | `ClientNotFoundException` hereda de `ClientExceptions`, lo que permite capturar toda la familia de errores del módulo en un único bloque. |
+| Excepciones de dominio | Cada excepción hereda de `DomainException` y declara su propio `StatusCode` y `Title`, de modo que `DomainExceptionHandler` traduce cualquiera de ellas sin conocer los tipos concretos. |
 | `AsNoTracking()` en lecturas | Las consultas de solo lectura no necesitan el change tracker de EF Core. |
 | `Guid` como clave primaria | Permite generar identificadores en cliente y evita colisiones al integrar orígenes de datos distintos. |
 
@@ -140,6 +140,8 @@ Métodos de pago disponibles (`PaymentMethodEnum`): `Cash`, `CreditCard`, `Debit
 | Framework | ASP.NET Core 10.0 (Web API) |
 | ORM | Entity Framework Core 10.0 |
 | Base de datos | PostgreSQL (proveedor `Npgsql`) |
+| Validación | [FluentValidation](https://docs.fluentvalidation.net/) 12 |
+| Errores | `ProblemDetails` (RFC 9457) vía `IExceptionHandler` |
 | Documentación | OpenAPI + [Scalar](https://scalar.com/) |
 | Lenguaje | C# 14 · `Nullable` e `ImplicitUsings` habilitados |
 
@@ -256,9 +258,19 @@ Ambos endpoints solo se registran cuando `ASPNETCORE_ENVIRONMENT=Development`.
 |---|---|---|---|---|
 | `GET` | `/api/Client` | Lista todos los clientes | — | `200` · `ReadClientDTO[]` |
 | `GET` | `/api/Client/{id}` | Obtiene un cliente por su `Guid` | — | `200` · `ReadClientDTO` |
-| `POST` | `/api/Client` | Crea un cliente | `ClientDTO` | `200` |
-| `PUT` | `/api/Client/{id}` | Actualiza un cliente existente | `ClientDTO` | `200` |
-| `DELETE` | `/api/Client/{id}` | Elimina un cliente | — | `200` |
+| `POST` | `/api/Client` | Crea un cliente | `ClientDTO` | `201` |
+| `PUT` | `/api/Client/{id}` | Actualiza un cliente existente | `ClientDTO` | `204` |
+| `DELETE` | `/api/Client/{id}` | Elimina un cliente | — | `204` |
+
+### Productos — `/api/Product`
+
+| Método | Ruta | Descripción | Cuerpo | Respuesta |
+|---|---|---|---|---|
+| `GET` | `/api/Product` | Lista todos los productos | — | `200` · `ReadProductDTO[]` |
+| `GET` | `/api/Product/{id}` | Obtiene un producto por su `Guid` | — | `200` · `ReadProductDTO` |
+| `POST` | `/api/Product` | Crea un producto | `ProductDTO` | `201` |
+| `PUT` | `/api/Product/{id}` | Actualiza un producto existente | `ProductDTO` | `204` |
+| `DELETE` | `/api/Product/{id}` | Elimina un producto | — | `204` |
 
 **Esquemas**
 
@@ -271,13 +283,30 @@ Ambos endpoints solo se registran cuando `ASPNETCORE_ENVIRONMENT=Development`.
   "phone": "70000000"
 }
 
-// ReadClientDTO — salida
+// ReadClientDTO — salida (añade el Id generado)
 {
   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "name": "Cristopher",
   "surname": "Miranda",
   "email": "cristopher@example.com",
   "phone": "70000000"
+}
+
+// ProductDTO — entrada para POST y PUT
+{
+  "name": "Teclado mecánico",
+  "quantity": 25,
+  "price": 349.90,
+  "brand": "Keychron"
+}
+
+// ReadProductDTO — salida (añade el Id generado)
+{
+  "id": "9c1f2a30-4b8e-4d21-9f6a-1e7c5b2d8a04",
+  "name": "Teclado mecánico",
+  "quantity": 25,
+  "price": 349.90,
+  "brand": "Keychron"
 }
 ```
 
@@ -291,6 +320,45 @@ curl -X POST http://localhost:5026/api/Client \
 
 ---
 
+## Manejo de errores
+
+Todos los errores se devuelven como `application/problem+json` siguiendo el estándar **RFC 9457 (ProblemDetails)**, con un `traceId` que permite correlacionar la respuesta con la entrada del log.
+
+| Situación | Estado | Origen |
+|---|---|---|
+| Datos de entrada inválidos | `400` | `FluentValidation` → `ValidationProblemDetails` |
+| Recurso inexistente | `404` | `ClientNotFoundException`, `ProductNotFoundException` |
+| Fallo no previsto | `500` | Se registra completo en el log; hacia afuera solo el `traceId` |
+
+```jsonc
+// GET /api/Client/3fa85f64-5717-4562-b3fc-2c963f66afa6
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+  "title": "Resource not found",
+  "status": 404,
+  "detail": "A client with Id '3fa85f64-5717-4562-b3fc-2c963f66afa6' was not found.",
+  "instance": "GET /api/Client/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "traceId": "00-73d18169243c629ad8feb8c6d3dc67dd-d4c6362a159c1003-00"
+}
+
+// POST /api/Product con cantidad negativa y precio en cero
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors",
+  "status": 400,
+  "instance": "POST /api/Product",
+  "errors": {
+    "Brand": ["Brand is required."],
+    "Quantity": ["The quantity cannot be negative."],
+    "Price": ["The price must be greater than zero."]
+  }
+}
+```
+
+Cada excepción de dominio hereda de `DomainException` y declara su propio `StatusCode` y `Title`. Por eso `DomainExceptionHandler` no conoce ninguna excepción concreta: agregar un módulo nuevo no requiere modificarlo.
+
+---
+
 ## Estructura del proyecto
 
 ```
@@ -300,13 +368,15 @@ CIWithJenkins/
 ├── DTOs/               Objetos de transferencia por módulo
 ├── Entities/           Modelo de dominio mapeado por EF Core
 ├── Enums/              Enumeraciones del dominio
-├── Exceptions/         Excepciones de dominio por módulo
+├── Exceptions/         Excepciones de dominio, con su código HTTP asociado
+├── Handlers/           DomainExceptionHandler — traducción de excepción a ProblemDetails
 ├── Interfaces/
 │   ├── Repository/     Contratos de acceso a datos
 │   └── Services/       Contratos de lógica de negocio
 ├── Migrations/         Migraciones generadas por EF Core
 ├── Repository/         Implementaciones de acceso a datos
 ├── Services/           Implementaciones de lógica de negocio
+├── Validators/         Reglas de validación de entrada (FluentValidation)
 └── Program.cs          Composición de la aplicación y registro de dependencias
 ```
 
@@ -320,9 +390,10 @@ Al añadir un módulo nuevo se replica el mismo corte vertical: entidad → DTOs
 
 - [x] Modelo de datos y migraciones iniciales
 - [x] CRUD de clientes con arquitectura en capas
-- [ ] Middleware global de manejo de excepciones (traducir excepciones de dominio a `ProblemDetails`)
-- [ ] Validación de entrada con FluentValidation
-- [ ] CRUD de productos, usuarios y roles
+- [x] CRUD de productos
+- [x] Manejo global de excepciones (traducción de excepciones de dominio a `ProblemDetails`)
+- [x] Validación de entrada con FluentValidation
+- [ ] CRUD de usuarios y roles
 - [ ] Registro de ventas con su detalle y cálculo de totales
 - [ ] Autenticación y autorización con JWT
 - [ ] Paginación y filtrado en los listados
@@ -336,7 +407,7 @@ Al añadir un módulo nuevo se replica el mismo corte vertical: entidad → DTOs
 
 **Infraestructura**
 
-- [ ] Workflow de CI en GitHub Actions (build + tests en cada push a `main`)
+- [x] Workflow de CI en GitHub Actions (build + tests en cada push a `main`)
 - [ ] `Jenkinsfile` de despliegue disparado por tags `v*`
 - [ ] Despliegue automatizado a servicio `systemd` sobre Fedora con estrategia de releases y rollback
 - [ ] Aplicación de migraciones en el despliegue mediante EF Core migration bundles
