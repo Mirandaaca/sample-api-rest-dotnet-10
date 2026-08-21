@@ -30,13 +30,14 @@ builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddDbContext<StoreContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 var app = builder.Build();
 
-// Debe ir primero: envuelve al resto del pipeline para poder atrapar
 // Must go first: it wraps the rest of the pipeline to be able to catch any exception that occurs within it
 app.UseExceptionHandler();
 

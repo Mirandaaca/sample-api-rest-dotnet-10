@@ -1,8 +1,5 @@
 namespace CIWithJenkins.Exceptions
 {
-    /// <summary>
-    /// Familia de excepciones del módulo de productos.
-    /// </summary>
     public abstract class ProductExceptions : DomainException
     {
         protected ProductExceptions(string message) : base(message) { }

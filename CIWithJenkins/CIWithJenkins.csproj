@@ -27,7 +27,6 @@
   <ItemGroup>
     <Folder Include="DTOs\Users\" />
     <Folder Include="DTOs\SaleDetails\" />
-    <Folder Include="DTOs\Roles\" />
     <Folder Include="DTOs\Sales\" />
     <Folder Include="UnitOfWork\" />
   </ItemGroup>
